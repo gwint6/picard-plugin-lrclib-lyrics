@@ -11,7 +11,7 @@ from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkReques
 
 
 PLUGIN_NAME = "LRCLIB Lyrics"
-PLUGIN_VERSION = "2.0.1"
+PLUGIN_VERSION = "2.0.2"
 
 LRCLIB_GET_URL = "https://lrclib.net/api/get"
 LRCLIB_SEARCH_URL = "https://lrclib.net/api/search"
@@ -799,7 +799,12 @@ def get_on_save(api: PluginApi, file: File) -> None:
     album = None
     try:
         _files_processing.add(file.filename)
-        album = file.parent.album
+        # Picard 3 exposes the linked Track or Cluster as parent_item.
+        # file.parent is Qt's parent() method and is not the music item.
+        parent_item = file.parent_item
+        album = getattr(parent_item, "album", None)
+        if album is None:
+            raise ValueError("Saved file is not linked to an album")
         metadata = file.metadata
         length_value = metadata.get("~length")
         if not length_value:

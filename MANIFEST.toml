@@ -1,6 +1,6 @@
 uuid = "351fe22c-3655-4184-8b7d-530d60c1bb9b"
 name = "LRCLIB Lyrics"
-version = "2.0.0"
+version = "2.0.1"
 description = "Fetch synchronized or plain lyrics from LRCLIB, embed them in tags, and optionally save sidecar files."
 api = ["3.0"]
 authors = ["Glicole"]

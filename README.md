@@ -2,6 +2,8 @@
 
 This is the Picard Plugin API v3 edition of LRCLIB Lyrics.
 
+Version 2.0.1 fixes configuration loading on Picard 3.0.1.
+
 ## Install in Picard 3.0+
 
 1. Extract the supplied ZIP to a permanent folder.

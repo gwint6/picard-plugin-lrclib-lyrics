@@ -11,7 +11,7 @@ from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkReques
 
 
 PLUGIN_NAME = "LRCLIB Lyrics"
-PLUGIN_VERSION = "2.0.0"
+PLUGIN_VERSION = "2.0.1"
 
 LRCLIB_GET_URL = "https://lrclib.net/api/get"
 LRCLIB_SEARCH_URL = "https://lrclib.net/api/search"
@@ -60,7 +60,9 @@ def _logger():
 
 
 def _setting(name: str):
-    return _plugin_api().plugin_config.get(name, PLUGIN_OPTIONS[name])
+    # Picard 3.0.1's ProfileConfigSection supports indexed access but does
+    # not yet implement dict.get(). Registered options return their default.
+    return _plugin_api().plugin_config[name]
 
 
 def _network() -> QNetworkAccessManager:
@@ -708,14 +710,12 @@ class LrclibLyricsOptionsPage(OptionsPage):
 
     def load(self):
         config = self.api.plugin_config
-        self.get_on_load.setChecked(bool(config.get("get_on_load", False)))
-        self.get_on_save.setChecked(bool(config.get("get_on_save", False)))
-        self.auto_overwrite.setChecked(bool(config.get("auto_overwrite", False)))
-        self.save_lrc.setChecked(bool(config.get("save_lrc_file", True)))
-        self.ignore_instrumental.setChecked(
-            bool(config.get("ignore_instrumental", False))
-        )
-        self.plain_as_txt.setChecked(bool(config.get("plain_as_txt", False)))
+        self.get_on_load.setChecked(bool(config["get_on_load"]))
+        self.get_on_save.setChecked(bool(config["get_on_save"]))
+        self.auto_overwrite.setChecked(bool(config["auto_overwrite"]))
+        self.save_lrc.setChecked(bool(config["save_lrc_file"]))
+        self.ignore_instrumental.setChecked(bool(config["ignore_instrumental"]))
+        self.plain_as_txt.setChecked(bool(config["plain_as_txt"]))
 
     def save(self):
         config = self.api.plugin_config
@@ -774,7 +774,7 @@ class LrclibLyricsOptionsPage(OptionsPage):
 
 
 def get_on_load(api: PluginApi, track: Track, file: File) -> None:
-    if not api.plugin_config.get("get_on_load", False) or not track.files:
+    if not api.plugin_config["get_on_load"] or not track.files:
         return
     try:
         fetch_lyrics(
@@ -789,7 +789,7 @@ def get_on_load(api: PluginApi, track: Track, file: File) -> None:
 
 
 def get_on_save(api: PluginApi, file: File) -> None:
-    if not api.plugin_config.get("get_on_save", False):
+    if not api.plugin_config["get_on_save"]:
         return
     if file.filename in _files_processing:
         _files_processing.discard(file.filename)
@@ -860,15 +860,13 @@ class LrcLibLyricsSearch(BaseAction):
 def _migrate_v2_settings(api: PluginApi) -> None:
     migration_key = "_v2_settings_migrated"
     api.plugin_config.register_option(migration_key, False)
-    if api.plugin_config.get(migration_key, False):
+    if api.plugin_config[migration_key]:
         return
     try:
         for name, default in PLUGIN_OPTIONS.items():
-            old_value = api.global_config.setting.get(name, None)
+            old_value = api.global_config.setting[name]
             if old_value is not None:
                 api.plugin_config[name] = old_value
-            elif name not in api.plugin_config:
-                api.plugin_config[name] = default
     finally:
         api.plugin_config[migration_key] = True
 
